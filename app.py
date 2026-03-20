@@ -84,6 +84,7 @@ def init_session_state():
         "embedding_model": None,
         "processed_files": set(),
         "llm_provider": None,
+        "llm_model": None,
         "embedding_provider": None,
     }
     for key, value in defaults.items():
@@ -108,6 +109,17 @@ with st.sidebar:
         key="provider_select",
     )
 
+    # Model selector
+    provider_cfg = LLM_MODELS[selected_provider]
+    model_options = provider_cfg["models"]
+    selected_model = st.selectbox(
+        "Model",
+        options=list(model_options.keys()),
+        format_func=lambda x: model_options[x],
+        index=list(model_options.keys()).index(provider_cfg["default_model"]),
+        key="model_select",
+    )
+
     # API Key for LLM
     default_key = get_api_key(selected_provider)
     api_key = st.text_input(
@@ -117,14 +129,16 @@ with st.sidebar:
         key="api_key_input",
     )
 
-    # Initialize / reinitialize LLM when provider or key changes
+    # Initialize / reinitialize LLM when provider, model, or key changes
     if api_key and (
         st.session_state.llm is None
         or st.session_state.llm_provider != selected_provider
+        or st.session_state.get("llm_model") != selected_model
     ):
         try:
-            st.session_state.llm = LLMProvider(selected_provider, api_key)
+            st.session_state.llm = LLMProvider(selected_provider, api_key, selected_model)
             st.session_state.llm_provider = selected_provider
+            st.session_state.llm_model = selected_model
         except Exception as e:
             st.error(f"Failed to connect to LLM: {e}")
 
@@ -292,8 +306,9 @@ if prompt := st.chat_input("Ask me anything about your documents or any topic...
 
     if st.session_state.llm is None:
         try:
-            st.session_state.llm = LLMProvider(selected_provider, api_key)
+            st.session_state.llm = LLMProvider(selected_provider, api_key, selected_model)
             st.session_state.llm_provider = selected_provider
+            st.session_state.llm_model = selected_model
         except Exception as e:
             st.error(f"Failed to initialize LLM: {e}")
             st.stop()

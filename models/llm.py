@@ -1,17 +1,14 @@
 from openai import OpenAI
 from groq import Groq
-import google.generativeai as genai
-
-from config.config import LLM_MODELS
-
+from google import genai
 
 class LLMProvider:
     """Unified interface for multiple LLM providers."""
 
-    def __init__(self, provider, api_key):
+    def __init__(self, provider, api_key, model_name):
         self.provider = provider
         self.api_key = api_key
-        self.model_name = LLM_MODELS[provider]["model"]
+        self.model_name = model_name
         self._initialize()
 
     def _initialize(self):
@@ -21,8 +18,7 @@ class LLMProvider:
             elif self.provider == "groq":
                 self.client = Groq(api_key=self.api_key)
             elif self.provider == "google":
-                genai.configure(api_key=self.api_key)
-                self.client = genai.GenerativeModel(self.model_name)
+                self.client = genai.Client(api_key=self.api_key)
         except Exception as e:
             raise ConnectionError(f"Failed to initialize {self.provider}: {e}")
 
@@ -72,31 +68,30 @@ class LLMProvider:
             if chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
 
-    def _build_google_history(self, messages):
-        history = []
-        for msg in messages[:-1]:
+    def _build_google_contents(self, messages, system_prompt):
+        contents = []
+        for msg in messages:
             role = "user" if msg["role"] == "user" else "model"
-            history.append({"role": role, "parts": [msg["content"]]})
-        return history
+            contents.append({"role": role, "parts": [{"text": msg["content"]}]})
+        if system_prompt and contents:
+            first_text = contents[0]["parts"][0]["text"]
+            contents[0]["parts"][0]["text"] = f"{system_prompt}\n\n{first_text}"
+        return contents
 
     def _generate_google(self, messages, system_prompt):
-        history = self._build_google_history(messages)
-        prompt = messages[-1]["content"]
-        if system_prompt:
-            prompt = f"{system_prompt}\n\n{prompt}"
-
-        chat = self.client.start_chat(history=history)
-        response = chat.send_message(prompt)
+        contents = self._build_google_contents(messages, system_prompt)
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=contents,
+        )
         return response.text
 
     def _stream_google(self, messages, system_prompt):
-        history = self._build_google_history(messages)
-        prompt = messages[-1]["content"]
-        if system_prompt:
-            prompt = f"{system_prompt}\n\n{prompt}"
-
-        chat = self.client.start_chat(history=history)
-        response = chat.send_message(prompt, stream=True)
+        contents = self._build_google_contents(messages, system_prompt)
+        response = self.client.models.generate_content_stream(
+            model=self.model_name,
+            contents=contents,
+        )
         for chunk in response:
             if chunk.text:
                 yield chunk.text

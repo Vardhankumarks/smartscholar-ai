@@ -1,5 +1,5 @@
 import numpy as np
-import google.generativeai as genai
+from google import genai
 from openai import OpenAI
 
 from config.config import EMBEDDING_PROVIDERS
@@ -18,7 +18,7 @@ class EmbeddingModel:
     def _initialize(self):
         try:
             if self.provider == "google":
-                genai.configure(api_key=self.api_key)
+                self.client = genai.Client(api_key=self.api_key)
             elif self.provider == "openai":
                 self.client = OpenAI(api_key=self.api_key)
         except Exception as e:
@@ -42,12 +42,12 @@ class EmbeddingModel:
         batch_size = 20
         for i in range(0, len(texts), batch_size):
             batch = texts[i : i + batch_size]
-            result = genai.embed_content(
+            result = self.client.models.embed_content(
                 model=self.config["model"],
-                content=batch,
-                task_type="retrieval_document",
+                contents=batch,
             )
-            embeddings.extend(result["embedding"])
+            for emb in result.embeddings:
+                embeddings.append(emb.values)
         return np.array(embeddings, dtype=np.float32)
 
     def _openai_embed(self, texts):

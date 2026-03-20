@@ -19,25 +19,39 @@ def get_api_key(provider):
 LLM_MODELS = {
     "google": {
         "name": "Google Gemini",
-        "model": "gemini-2.0-flash",
+        "models": {
+            "gemini-2.5-flash": "Gemini 2.5 Flash (recommended)",
+            "gemini-2.5-flash-lite": "Gemini 2.5 Flash-Lite (fastest)",
+            "gemini-2.5-pro": "Gemini 2.5 Pro (most capable)",
+        },
+        "default_model": "gemini-2.5-flash",
         "supports_embeddings": True,
     },
     "groq": {
-        "name": "Groq (Llama 3.3 70B)",
-        "model": "llama-3.3-70b-versatile",
+        "name": "Groq (Free & Fast)",
+        "models": {
+            "llama-3.3-70b-versatile": "Llama 3.3 70B (recommended)",
+            "llama-3.1-8b-instant": "Llama 3.1 8B (fastest)",
+            "mixtral-8x7b-32768": "Mixtral 8x7B",
+        },
+        "default_model": "llama-3.3-70b-versatile",
         "supports_embeddings": False,
     },
     "openai": {
-        "name": "OpenAI (GPT-3.5 Turbo)",
-        "model": "gpt-3.5-turbo",
+        "name": "OpenAI",
+        "models": {
+            "gpt-3.5-turbo": "GPT-3.5 Turbo",
+            "gpt-4o-mini": "GPT-4o Mini",
+        },
+        "default_model": "gpt-3.5-turbo",
         "supports_embeddings": True,
     },
 }
 
 EMBEDDING_PROVIDERS = {
     "google": {
-        "name": "Google (embedding-001)",
-        "model": "models/embedding-001",
+        "name": "Google (gemini-embedding-001)",
+        "model": "gemini-embedding-001",
         "dimension": 768,
     },
     "openai": {
