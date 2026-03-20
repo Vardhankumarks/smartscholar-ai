@@ -1,4 +1,4 @@
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 from config.config import MAX_SEARCH_RESULTS
 
@@ -6,8 +6,8 @@ from config.config import MAX_SEARCH_RESULTS
 def web_search(query, max_results=MAX_SEARCH_RESULTS):
     """Perform a live web search using DuckDuckGo and return formatted results."""
     try:
-        with DDGS() as ddgs:
-            results = list(ddgs.text(query, max_results=max_results))
+        ddgs = DDGS()
+        results = list(ddgs.text(query, max_results=max_results))
 
         formatted = []
         for r in results:
