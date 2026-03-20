@@ -120,14 +120,18 @@ with st.sidebar:
         key="model_select",
     )
 
-    # API Key for LLM
-    default_key = get_api_key(selected_provider)
-    api_key = st.text_input(
-        f"{provider_options[selected_provider]} API Key",
-        value=default_key,
-        type="password",
-        key="api_key_input",
-    )
+    # API Key for LLM — use secrets silently if available, otherwise ask user
+    secret_key = get_api_key(selected_provider)
+    if secret_key:
+        api_key = secret_key
+        st.success("API key loaded from secrets", icon="🔑")
+    else:
+        api_key = st.text_input(
+            f"{provider_options[selected_provider]} API Key",
+            type="password",
+            key="api_key_input",
+            help="Enter your API key. It won't be stored or shared.",
+        )
 
     # Initialize / reinitialize LLM when provider, model, or key changes
     if api_key and (
