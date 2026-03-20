@@ -1,5 +1,7 @@
 # 🎓 SmartScholar AI — Intelligent Research & Study Assistant
 
+**Live App:** [smartscholar-ai-vardhan.streamlit.app](https://smartscholar-ai-vardhan.streamlit.app/)
+
 An AI-powered chatbot that helps students and researchers quickly find answers from their own documents and the web. Built with **Streamlit**, powered by multiple LLM providers, and featuring RAG (Retrieval-Augmented Generation) and live web search.
 
 ## Features
